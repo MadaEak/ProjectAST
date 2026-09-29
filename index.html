@@ -5,36 +5,128 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AST Builder ULTIMATE - Móvil y PC</title>
     <style>
-        body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; touch-action: none; }
-        #gameContainer { position: relative; width: 1000px; max-width: 100vw; display: flex; justify-content: center; }
-        #gameUI { position: absolute; top: 15px; width: 100%; text-align: center; pointer-events: none; z-index: 10; display: flex; justify-content: space-between; padding: 0 30px; box-sizing: border-box; }
-        .ui-box { background: rgba(30, 41, 59, 0.85); padding: 8px 15px; border-radius: 8px; border: 1px solid #334155; backdrop-filter: blur(4px); }
-        h1 { margin: 0; color: #38bdf8; font-size: 1.2rem; text-shadow: 0 0 10px rgba(56,189,248,0.5); }
-        h2 { margin: 3px 0 0 0; color: #cbd5e1; font-size: 0.95rem; font-family: monospace; }
-        #timerDisplay { font-size: 1.2rem; font-weight: bold; color: #fbbf24; font-family: monospace;}
-        canvas { border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 2px solid #38bdf8; max-width: 100%; height: auto; }
+        body { 
+            margin: 0; 
+            background-color: #0f172a; 
+            color: #f8fafc; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            touch-action: none; 
+        }
+        #gameContainer { 
+            position: relative; 
+            width: 1000px; 
+            height: 600px; 
+            max-width: 100vw; 
+            max-height: 80vh;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+        }
+        #gameUI { 
+            position: absolute; 
+            top: 10px; 
+            width: 100%; 
+            text-align: center; 
+            pointer-events: none; 
+            z-index: 10; 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0 20px; 
+            box-sizing: border-box; 
+        }
+        .ui-box { 
+            background: rgba(30, 41, 59, 0.85); 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            border: 1px solid #334155; 
+            backdrop-filter: blur(4px); 
+        }
+        h1 { margin: 0; color: #38bdf8; font-size: 1.1rem; text-shadow: 0 0 10px rgba(56,189,248,0.5); }
+        h2 { margin: 2px 0 0 0; color: #cbd5e1; font-size: 0.85rem; font-family: monospace; }
+        #timerDisplay { font-size: 1.1rem; font-weight: bold; color: #fbbf24; font-family: monospace;}
+        
+        canvas { 
+            border-radius: 12px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+            border: 2px solid #38bdf8; 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            background: #0f172a;
+        }
         
         /* Controles Táctiles para Móviles */
-        .touch-controls { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; z-index: 20; }
-        .touch-group { display: flex; gap: 15px; pointer-events: auto; }
-        .t-btn { width: 65px; height: 65px; background: rgba(56, 189, 248, 0.25); border: 2px solid rgba(56, 189, 248, 0.6); border-radius: 50%; color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; user-select: none; backdrop-filter: blur(4px); outline: none; active { background: rgba(56, 189, 248, 0.5); } }
+        .touch-controls { 
+            position: absolute; 
+            bottom: 5px; 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0 15px; 
+            box-sizing: border-box; 
+            pointer-events: none; 
+            z-index: 20; 
+        }
+        .touch-group { display: flex; gap: 12px; pointer-events: auto; }
+        .t-btn { 
+            width: 55px; 
+            height: 55px; 
+            background: rgba(56, 189, 248, 0.25); 
+            border: 2px solid rgba(56, 189, 248, 0.6); 
+            border-radius: 50%; 
+            color: white; 
+            font-size: 1.3rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            user-select: none; 
+            backdrop-filter: blur(4px); 
+            outline: none; 
+        }
         .t-btn:active { background: rgba(56, 189, 248, 0.6); transform: scale(0.95); }
-        #buildBtn { background: rgba(245, 158, 11, 0.3); border-color: rgba(245, 158, 11, 0.6); font-size: 1.2rem; }
+        #buildBtn { background: rgba(245, 158, 11, 0.3); border-color: rgba(245, 158, 11, 0.6); font-size: 1.1rem; }
 
-        #instructions { position: absolute; bottom: -35px; width: 100%; text-align: center; color: #94a3b8; font-size: 0.9rem; }
-        kbd { background: #334155; padding: 2px 6px; border-radius: 4px; color: #38bdf8; font-family: monospace; }
+        #instructions { 
+            margin-top: 8px; 
+            text-align: center; 
+            color: #94a3b8; 
+            font-size: 0.8rem; 
+            max-width: 1000px;
+            padding: 0 10px;
+        }
+        kbd { background: #334155; padding: 2px 5px; border-radius: 4px; color: #38bdf8; font-family: monospace; }
         
-        .overlay-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; border-radius: 12px; backdrop-filter: blur(8px); transition: opacity 0.5s;}
-        .input-group { margin: 15px 0; display: flex; flex-direction: column; align-items: center; gap: 10px;}
-        input[type="text"] { padding: 10px 15px; font-size: 1.2rem; border-radius: 8px; border: 2px solid #38bdf8; background: #1e293b; color: white; outline: none; text-align: center;}
-        input[type="color"] { width: 60px; height: 60px; border: none; border-radius: 50%; cursor: pointer; background: transparent;}
+        .overlay-screen { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(15, 23, 42, 0.95); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 100; 
+            border-radius: 12px; 
+            backdrop-filter: blur(8px); 
+        }
+        .input-group { margin: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 8px;}
+        input[type="text"] { padding: 8px 12px; font-size: 1.1rem; border-radius: 8px; border: 2px solid #38bdf8; background: #1e293b; color: white; outline: none; text-align: center;}
+        input[type="color"] { width: 50px; height: 50px; border: none; border-radius: 50%; cursor: pointer; background: transparent;}
         input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #38bdf8; }
-        button { background: #38bdf8; color: #0f172a; border: none; padding: 12px 30px; font-size: 1.2rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-top: 20px;}
+        button { background: #38bdf8; color: #0f172a; border: none; padding: 10px 25px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-top: 15px;}
         button:hover { background: #0284c7; color: white; transform: scale(1.05);}
         .hidden { display: none !important; opacity: 0; pointer-events: none;}
         
-        #finalStats { background: #1e293b; padding: 30px; border-radius: 15px; border: 2px solid #10b981; text-align: center; margin-top: 20px;}
-        #finalTimeStr { font-size: 3rem; color: #fbbf24; font-family: monospace; font-weight: bold; margin: 10px 0;}
+        #finalStats { background: #1e293b; padding: 20px; border-radius: 15px; border: 2px solid #10b981; text-align: center; margin-top: 15px;}
+        #finalTimeStr { font-size: 2.5rem; color: #fbbf24; font-family: monospace; font-weight: bold; margin: 5px 0;}
     </style>
 </head>
 <body>
@@ -53,16 +145,15 @@
 
         <!-- Pantalla Inicio -->
         <div id="startScreen" class="overlay-screen">
-            <h1 style="font-size: 3rem; margin-bottom: 5px;">AST Builder <span style="color:#ef4444">ULTIMATE</span></h1>
-            <p style="color: #94a3b8; margin-bottom: 25px; text-align: center; max-width: 450px; font-size: 0.95rem;">
-                Compatible con PC y Celular.<br>
-                Usa los botones en pantalla o teclado. <strong>Toca el lienzo para construir bloques.</strong>
+            <h1 style="font-size: 2.5rem; margin-bottom: 5px;">AST Builder <span style="color:#ef4444">ULTIMATE</span></h1>
+            <p style="color: #94a3b8; margin-bottom: 20px; text-align: center; max-width: 400px; font-size: 0.9rem;">
+                Diseñado para Móvil y PC.<br>Usa los botones virtuales en pantalla o teclado.
             </p>
             <div class="input-group">
                 <input type="text" id="playerNameInput" placeholder="Tu Nombre" autocomplete="off" value="Estudiante">
             </div>
             <div class="input-group">
-                <label style="color:#cbd5e1;">Pinta tu Cubo:</label>
+                <label style="color:#cbd5e1; font-size:0.9rem;">Pinta tu Cubo:</label>
                 <input type="color" id="playerColorInput" value="#10b981">
             </div>
             <button id="startBtn">Comenzar Examen</button>
@@ -70,11 +161,11 @@
 
         <!-- Pantalla Final -->
         <div id="endScreen" class="overlay-screen hidden">
-            <h1 style="font-size: 3rem; color: #10b981; text-shadow: 0 0 20px rgba(16,185,129,0.5);">¡Ingeniería Dominada!</h1>
+            <h1 style="font-size: 2.5rem; color: #10b981; text-shadow: 0 0 20px rgba(16,185,129,0.5);">¡Ingeniería Dominada!</h1>
             <div id="finalStats">
-                <h2 style="color: #e2e8f0; font-size: 1.3rem;">Tiempo Total de <span id="finalNameDisplay"></span>:</h2>
+                <h2 style="color: #e2e8f0; font-size: 1.1rem;">Tiempo Total de <span id="finalNameDisplay"></span>:</h2>
                 <div id="finalTimeStr">00:00.00</div>
-                <p style="color: #94a3b8;">¡Has superado el desafío definitivo!</p>
+                <p style="color: #94a3b8; font-size: 0.9rem;">¡Has superado el desafío definitivo!</p>
             </div>
             <button onclick="location.reload()">Nuevo Intento</button>
         </div>
@@ -92,10 +183,10 @@
                 <button class="t-btn" id="jumpBtn">▲</button>
             </div>
         </div>
+    </div>
 
-        <div id="instructions" class="hidden">
-            PC: <kbd>←</kbd> <kbd>→</kbd> Mover | <kbd>↑</kbd> Saltar | <kbd>Click</kbd> Construir &nbsp;|&nbsp; Móvil: Usa los botones virtuales y toca el juego.
-        </div>
+    <div id="instructions" class="hidden">
+        PC: <kbd>←</kbd> <kbd>→</kbd> Mover | <kbd>↑</kbd> Saltar | <kbd>Click</kbd> Construir &nbsp;|&nbsp; Móvil: Usa los botones virtuales y toca el juego.
     </div>
 
     <script>
@@ -116,7 +207,6 @@
         const gravity = 0.6;
         const keys = { ArrowLeft: false, ArrowRight: false };
         let upPressed = false; 
-        let buildModeActive = false; // Alterna si al tocar la pantalla se mueve o construye en móvil
         
         let platforms = []; 
         let movingPlatforms = [];
@@ -188,7 +278,6 @@
             }
         ];
 
-        // Controles de Teclado PC
         window.addEventListener('keydown', e => { 
             if (keys.hasOwnProperty(e.key)) keys[e.key] = true; 
             if (e.key === 'ArrowUp') {
@@ -202,21 +291,37 @@
             if (e.key === 'ArrowUp') keys.ArrowUpPress = false;
         });
 
-        // Controles Táctiles Celular (Botones)
-        document.getElementById('leftBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys.ArrowLeft = true; });
-        document.getElementById('leftBtn').addEventListener('touchend', (e) => { e.preventDefault(); keys.ArrowLeft = false; });
-        document.getElementById('rightBtn').addEventListener('touchstart', (e) => { e.preventDefault(); keys.ArrowRight = true; });
-        document.getElementById('rightBtn').addEventListener('touchend', (e) => { e.preventDefault(); keys.ArrowRight = false; });
-        document.getElementById('jumpBtn').addEventListener('touchstart', (e) => { e.preventDefault(); upPressed = true; });
-        
-        // Botón especial para alternar modo construcción o construir directo
-        document.getElementById('buildBtn').addEventListener('touchstart', (e) => { 
+        // Controles Táctiles Celular optimizados
+        const setupTouchButton = (id, actionStart, actionEnd) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); actionStart(); });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); actionEnd(); });
+            btn.addEventListener('mousedown', (e) => { actionStart(); });
+            btn.addEventListener('mouseup', (e) => { actionEnd(); });
+        };
+
+        setupTouchButton('leftBtn', () => keys.ArrowLeft = true, () => keys.ArrowLeft = false);
+        setupTouchButton('rightBtn', () => keys.ArrowRight = true, () => keys.ArrowRight = false);
+        setupTouchButton('jumpBtn', () => upPressed = true, () => {});
+
+        document.getElementById('buildBtn').addEventListener('touchstart', (e) => {
             e.preventDefault();
-            buildModeActive = !buildModeActive;
-            document.getElementById('buildBtn.style').background = buildModeActive ? 'rgba(245, 158, 11, 0.7)' : 'rgba(245, 158, 11, 0.3)';
+            spawnBlockAtCenter();
+        });
+        document.getElementById('buildBtn').addEventListener('click', (e) => {
+            spawnBlockAtCenter();
         });
 
-        // Evento universal de creación de bloques (Mouse o Toque en pantalla)
+        function spawnBlockAtCenter() {
+            if (gameState !== 'playing' && gameState !== 'falling_wrong') return;
+            // Si presionan el botón de construir desde el móvil, crea un bloque justo frente al jugador
+            if(userBlocks.length >= 5) userBlocks.shift();
+            let bx = player.x + (player.vx >= 0 ? 50 : -70);
+            let by = player.y + 40;
+            userBlocks.push({ x: bx, y: by, w: 60, h: 14, life: 240, maxLife: 240 });
+        }
+
+        // Creación por toque directo en el canvas (PC y Celular)
         canvas.addEventListener('pointerdown', (e) => {
             if (gameState !== 'playing' && gameState !== 'falling_wrong') return;
             const rect = canvas.getBoundingClientRect();
@@ -230,7 +335,7 @@
         });
 
         document.getElementById('startBtn').addEventListener('click', () => {
-            const name = document.getElementById('playerNameInput').value.trim() || "Estudiante";
+            const name = document.getElementById('playerNameInput'].value.trim() || "Estudiante";
             player.baseColor = document.getElementById('playerColorInput').value;
             player.color = player.baseColor;
             
@@ -240,7 +345,7 @@
             document.getElementById('startScreen').classList.add('hidden');
             document.getElementById('gameUI').classList.remove('hidden');
             document.getElementById('instructions').classList.remove('hidden');
-            document.getElementById('touchControls').classList.remove('hidden'); // Muestra los botones en móvil
+            document.getElementById('touchControls').classList.remove('hidden');
             
             currentLevel = 0;
             startTime = Date.now();
