@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AST Builder ULTIMATE - Examen Final</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #gameContainer {
+            position: relative;
+        }
+
+        #gameUI {
+            position: absolute;
+            top: 15px;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-sizing: border-box;
+        }
+
+        .ui-box {
+            background: rgba(30, 41, 59, 0.85);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            backdrop-filter: blur(4px);
+        }
+
+        h1 {
+            margin: 0;
+            color: #38bdf8;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        h2 {
+            margin: 5px 0 0 0;
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            font-family: monospace;
+        }
+
+        #timerDisplay {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #fbbf24;
+            font-family: monospace;
+        }
+
+        canvas {
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            border: 2px solid #38bdf8;
+            cursor: crosshair;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: -45px;
+            width: 100%;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        kbd {
+            background: #334155;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #38bdf8;
+            font-family: monospace;
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            transition: opacity 0.5s;
+        }
+
+        .input-group {
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            border: 2px solid #38bdf8;
+            background: #1e293b;
+            color: white;
+            outline: none;
+            text-align: center;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border-radius: 50%;
+            border: 2px solid #38bdf8;
+        }
+
+        button {
+            background: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #0284c7;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #finalStats {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #10b981;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #finalTimeStr {
+            font-size: 3.5rem;
+            color: #fbbf24;
+            font-family: monospace;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="gameContainer">
+        <div id="gameUI" class="hidden">
+            <div class="ui-box">
+                <div>Ingeniero: <span id="playerNameDisplay" style="color:#38bdf8; font-weight:bold;"></span></div>
+                <div id="timerDisplay">00:00.00</div>
+            </div>
+            <div class="ui-box">
+                <h1>Nivel <span id="lvlDisplay">1</span>/5</h1>
+                <h2 id="expDisplay">Tema</h2>
+            </div>
+            <div class="ui-box" style="visibility:hidden;">Espacio</div>
+        </div>
+
+        <div id="startScreen" class="overlay-screen">
+            <h1 style="font-size: 3.5rem; margin-bottom: 5px;">AST Builder <span style="color:#ef4444">ULTIMATE</span>
+            </h1>
+            <p style="color: #94a3b8; margin-bottom: 30px; text-align: center; max-width: 500px;">
+                Construye bloques <kbd>Click</kbd> y puedes hacer wall jump <kbd>↑</kbd>.<br>
+                <strong>¡Comprueba lo aprendido!</strong><br>
+                <em>Cuidado con sierras, pinchos y plataformas móviles.</em>
+            </p>
+            <div class="input-group">
+                <input type="text" id="playerNameInput" placeholder="Tu Nombre" autocomplete="off" value="Estudiante">
+            </div>
+            <div class="input-group">
+                <label style="color:#cbd5e1;">Pinta tu Cubo:</label>
+                <input type="color" id="playerColorInput" value="#10b981">
+            </div>
+            <button id="startBtn">Comenzar Examen</button>
+        </div>
+
+        <div id="endScreen" class="overlay-screen hidden">
+            <h1 style="font-size: 4rem; color: #10b981; text-shadow: 0 0 20px rgba(16,185,129,0.5);">¡Ingeniería
+                Dominada!</h1>
+            <div id="finalStats">
+                <h2 style="color: #e2e8f0; font-size: 1.5rem;">Tiempo Total de <span id="finalNameDisplay"></span>:</h2>
+                <div id="finalTimeStr">00:00.00</div>
+                <p style="color: #94a3b8;">¡Has superado el desafío definitivo de compiladores!</p>
+            </div>
+            <button onclick="location.reload()">Nuevo Intento</button>
+        </div>
+
+        <canvas id="gameCanvas" width="1000" height="650"></canvas>
+        <div id="instructions" class="hidden">
+            Moverse: <kbd>←</kbd> <kbd>→</kbd> | Saltar/Wall Jump: <kbd>↑</kbd> | Poner Bloque: <kbd>Click</kbd>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameState = 'start';
+        let startTime = 0;
+        let currentLevel = 0;
+        let shakeFrames = 0;
+        let userBlocks = [];
+
+        const player = {
+            x: 50, y: 0, w: 26, h: 26, vx: 0, vy: 0,
+            speed: 5.8, jumpPower: -12.5, color: '#10b981', baseColor: '#10b981',
+            scaleX: 1, scaleY: 1
+        };
+        const gravity = 0.6;
+        const keys = { ArrowLeft: false, ArrowRight: false };
+        let upPressed = false;
+
+        let platforms = [];
+        let movingPlatforms = [];
+        let walls = [];
+        let hazards = [];
+        let spikes = [];
+
+        const questionsDb = {
+            prec1: { exp: "Precedencia: 2 + 3 * 4", ans: [{ text: "(2+3)*4", isCorrect: false }, { text: "2+(3*4)", isCorrect: true }] },
+            prec2: { exp: "Precedencia: a / b + c", ans: [{ text: "a/(b+c)", isCorrect: false }, { text: "(a/b)+c", isCorrect: true }] },
+            asoc1: { exp: "Asociatividad: x - y - z", ans: [{ text: "x-(y-z)", isCorrect: false }, { text: "(x-y)-z", isCorrect: true }] },
+            asoc2: { exp: "Asociatividad: 2 ^ 3 ^ 2", ans: [{ text: "(2^3)^2", isCorrect: false }, { text: "2^(3^2)", isCorrect: true }] },
+            gram1: { exp: "Regla: A -> A α | β", ans: [{ text: "Bucle Infinito", isCorrect: true }, { text: "Gramática OK", isCorrect: false }] },
+            gram2: { exp: "Regla: A -> α B | α C", ans: [{ text: "Factorización", isCorrect: true }, { text: "Sin Ambigüedad", isCorrect: false }] },
+            dangl: { exp: "Problema: Dangling Else", ans: [{ text: "Ambigüedad", isCorrect: true }, { text: "Error Léxico", isCorrect: false }] },
+            ast: { exp: "AST (Árbol de Sintaxis)", ans: [{ text: "Omite tokens ( )", isCorrect: true }, { text: "Incluye todo", isCorrect: false }] }
+        };
+
+        const levels = [
+            // Nivel 1
+            {
+                bgTop: "#0f172a", bgBot: "#1e1b4b", spawn: { x: 50, y: 550 },
+                pools: [questionsDb.prec1, questionsDb.prec2],
+                answerPositions: [{ x: 150, y: 350 }, { x: 650, y: 350 }],
+                walls: [{ x: 450, y: 400, w: 80, h: 250 }],
+                grounds: [{ x: 0, y: 600, w: 250, h: 20 }, { x: 750, y: 600, w: 250, h: 20 }],
+                hazards: [], spikes: []
+            },
+            // Nivel 2
+            {
+                bgTop: "#17153b", bgBot: "#022c22", spawn: { x: 50, y: 550 },
+                pools: [questionsDb.asoc1, questionsDb.asoc2],
+                answerPositions: [{ x: 600, y: 420 }, { x: 600, y: 220 }],
+                walls: [{ x: 200, y: 0, w: 40, h: 500 }, { x: 420, y: 150, w: 40, h: 500 }],
+                grounds: [{ x: 0, y: 600, w: 150, h: 20 }],
+                hazards: [{ x: 310, y: 300, size: 25, range: 180, axis: 'y', speed: 3.5, start: 300 }],
+                spikes: []
+            },
+            // Nivel 3
+            {
+                bgTop: "#2a0a18", bgBot: "#0f172a", spawn: { x: 50, y: 100 },
+                pools: [questionsDb.gram1, questionsDb.gram2],
+                answerPositions: [{ x: 150, y: 450 }, { x: 650, y: 450 }],
+                walls: [{ x: 0, y: 250, w: 120, h: 400 }, { x: 880, y: 250, w: 120, h: 400 }],
+                grounds: [{ x: 0, y: 150, w: 150, h: 20 }],
+                movingGrounds: [
+                    { x: 180, y: 280, w: 90, h: 18, range: 140, axis: 'y', speed: 2, start: 280, dir: 1 },
+                    { x: 520, y: 350, w: 100, h: 18, range: 140, axis: 'x', speed: 2.5, start: 520, dir: 1 }
+                ],
+                hazards: [],
+                spikes: [{ x: 120, y: 630, width: 760, count: 22 }]
+            },
+            // Nivel 4
+            {
+                bgTop: "#022c22", bgBot: "#0f172a", spawn: { x: 50, y: 550 },
+                pools: [questionsDb.dangl, questionsDb.prec1],
+                answerPositions: [{ x: 680, y: 340 }, { x: 280, y: 240 }],
+                walls: [{ x: 350, y: 350, w: 35, h: 250 }, { x: 620, y: 220, w: 35, h: 250 }],
+                grounds: [{ x: 0, y: 600, w: 120, h: 20 }],
+                movingGrounds: [{ x: 450, y: 450, w: 80, h: 18, range: 100, axis: 'x', speed: 2, start: 450, dir: 1 }],
+                hazards: [{ x: 500, y: 300, size: 22, range: 80, axis: 'y', speed: 2.5, start: 300 }],
+                spikes: [{ x: 350, y: 350, width: 35, count: 1 }, { x: 620, y: 220, width: 35, count: 1 }]
+            },
+            // Nivel 5 CORREGIDO: Guantelete Final con respuestas despejadas y accesibles
+            {
+                bgTop: "#311024", bgBot: "#000000", spawn: { x: 450, y: 550 },
+                pools: [questionsDb.ast, questionsDb.gram2],
+                answerPositions: [{ x: 120, y: 400 }, { x: 700, y: 400 }],
+                walls: [{ x: 300, y: 200, w: 35, h: 300 }, { x: 670, y: 200, w: 35, h: 300 }],
+                grounds: [{ x: 400, y: 600, w: 200, h: 20 }],
+                movingGrounds: [{ x: 430, y: 320, w: 140, h: 18, range: 120, axis: 'x', speed: 2, start: 430, dir: 1 }],
+                hazards: [{ x: 490, y: 150, size: 25, range: 100, axis: 'y', speed: 3, start: 150 }],
+                spikes: [{ x: 300, y: 500, width: 35, count: 1 }, { x: 670, y: 500, width: 35, count: 1 }]
+            }
+        ];
+
+        window.addEventListener('keydown', e => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!keys.ArrowUpPress) upPressed = true;
+                keys.ArrowUpPress = true;
+            }
+        });
+        window.addEventListener('keyup', e => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+            if (e.key === 'ArrowUp') keys.ArrowUpPress = false;
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const name = document.getElementById('playerNameInput').value.trim() || "Estudiante";
+            player.baseColor = document.getElementById('playerColorInput').value;
+            player.color = player.baseColor;
+
+            document.getElementById('playerNameDisplay').innerText = name;
+            document.getElementById('finalNameDisplay').innerText = name;
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameUI').classList.remove('hidden');
+            document.getElementById('instructions').classList.remove('hidden');
+
+            currentLevel = 0;
+            startTime = Date.now();
+            gameState = 'playing';
+            initLevel();
+            requestAnimationFrame(gameLoop);
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (gameState !== 'playing' && gameState !== 'falling_wrong') return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+
+            if (userBlocks.length >= 5) userBlocks.shift();
+            userBlocks.push({ x: mouseX - 30, y: mouseY - 8, w: 60, h: 14, life: 240, maxLife: 240 });
+        });
+
+        function initLevel() {
+            if (currentLevel >= levels.length) {
+                gameState = 'end';
+                document.getElementById('finalTimeStr').innerText = document.getElementById('timerDisplay').innerText;
+                document.getElementById('endScreen').classList.remove('hidden');
+                document.getElementById('gameUI').classList.add('hidden');
+                return;
+            }
+
+            const lvl = levels[currentLevel];
+            const currentQ = lvl.pools[Math.floor(Math.random() * lvl.pools.length)];
+
+            let coords = [...lvl.answerPositions];
+            if (Math.random() > 0.5) coords.reverse();
+
+            document.getElementById('lvlDisplay').innerText = currentLevel + 1;
+            document.getElementById('expDisplay').innerText = currentQ.exp;
+            gameState = 'playing';
+            userBlocks = [];
+            player.color = player.baseColor;
+
+            player.x = lvl.spawn.x; player.y = lvl.spawn.y;
+            player.vx = 0; player.vy = 0;
+            player.scaleX = 1; player.scaleY = 1;
+
+            walls = lvl.walls.map(w => ({ ...w }));
+            hazards = lvl.hazards ? lvl.hazards.map(h => ({ ...h, angle: 0, dir: 1 })) : [];
+            movingPlatforms = lvl.movingGrounds ? lvl.movingGrounds.map(m => ({ ...m, type: 'moving' })) : [];
+            spikes = lvl.spikes ? lvl.spikes.map(s => ({ ...s })) : [];
+
+            platforms = [
+                ...lvl.grounds.map(g => ({ ...g, type: 'ground', isActive: true })),
+                { text: currentQ.ans[0].text, isCorrect: currentQ.ans[0].isCorrect, x: coords[0].x, y: coords[0].y, w: 180, h: 36, type: 'answer', isActive: true, baseY: coords[0].y, floatTimer: Math.random() * 10, alpha: 1 },
+                { text: currentQ.ans[1].text, isCorrect: currentQ.ans[1].isCorrect, x: coords[1].x, y: coords[1].y, w: 180, h: 36, type: 'answer', isActive: true, baseY: coords[1].y, floatTimer: Math.random() * 10, alpha: 1 }
+            ];
+        }
+
+        function isColliding(a, b) {
+            return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+        }
+
+        function circleRectCollide(cx, cy, radius, rx, ry, rw, rh) {
+            let testX = cx; let testY = cy;
+            if (cx < rx) testX = rx; else if (cx > rx + rw) testX = rx + rw;
+            if (cy < ry) testY = ry; else if (cy > ry + rh) testY = ry + rh;
+            let distX = cx - testX; let distY = cy - testY;
+            return (distX * distX + distY * distY) <= (radius * radius);
+        }
+
+        function spikeCollide(player, s) {
+            return player.x < s.x + s.width && player.x + player.w > s.x && player.y + player.h > s.y - 15 && player.y < s.y;
+        }
+
+        function die(shake = true) {
+            player.color = '#ef4444';
+            player.vy = -5;
+            gameState = 'falling_wrong';
+            if (shake) shakeFrames = 15;
+        }
+
+        function update() {
+            if (gameState !== 'start' && gameState !== 'end') {
+                let date = new Date(Date.now() - startTime);
+                document.getElementById('timerDisplay').innerText =
+                    `${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${Math.floor(date.getMilliseconds() / 10).toString().padStart(2, '0')}`;
+            }
+            if (gameState === 'start' || gameState === 'end') return;
+
+            userBlocks.forEach(b => b.life--);
+            userBlocks = userBlocks.filter(b => b.life > 0);
+
+            hazards.forEach(h => {
+                h.angle += 0.2;
+                if (h.range > 0) {
+                    if (h.axis === 'x') {
+                        h.x += h.speed * h.dir;
+                        if (Math.abs(h.x - h.start) >= h.range) h.dir *= -1;
+                    } else {
+                        h.y += h.speed * h.dir;
+                        if (Math.abs(h.y - h.start) >= h.range) h.dir *= -1;
+                    }
+                }
+                if (gameState === 'playing' && circleRectCollide(h.x, h.y, h.size - 4, player.x, player.y, player.w, player.h)) die();
+            });
+
+            if (gameState === 'playing') {
+                spikes.forEach(s => {
+                    if (spikeCollide(player, s)) die();
+                });
+            }
+
+            movingPlatforms.forEach(m => {
+                if (m.axis === 'x') {
+                    m.x += m.speed * m.dir;
+                    if (Math.abs(m.x - m.start) >= m.range) m.dir *= -1;
+                } else {
+                    m.y += m.speed * m.dir;
+                    if (Math.abs(m.y - m.start) >= m.range) m.dir *= -1;
+                }
+            });
+
+            platforms.forEach(p => {
+                if (p.type === 'answer') {
+                    if (p.isActive) {
+                        p.floatTimer += 0.05;
+                        p.y = p.baseY + Math.sin(p.floatTimer) * 5;
+                    } else {
+                        p.y += 8;
+                        p.alpha = Math.max(0, p.alpha - 0.05);
+                    }
+                }
+            });
+
+            if (keys.ArrowLeft) player.vx -= 1.2;
+            if (keys.ArrowRight) player.vx += 1.2;
+            if (player.vx > player.speed) player.vx = player.speed;
+            if (player.vx < -player.speed) player.vx = -player.speed;
+            player.vx *= 0.8;
+
+            player.x += player.vx;
+            let onWall = 0;
+
+            if (gameState === 'playing') {
+                walls.forEach(w => {
+                    if (isColliding(player, w)) {
+                        if (player.vx > 0) { player.x = w.x - player.w; onWall = 1; }
+                        else if (player.vx < 0) { player.x = w.x + w.w; onWall = -1; }
+                        player.vx = 0;
+                    }
+                });
+                if (player.x < 0) { player.x = 0; player.vx = 0; }
+                if (player.x + player.w > canvas.width) { player.x = canvas.width - player.w; player.vx = 0; }
+            }
+
+            let prevBottom = player.y + player.h - player.vy;
+            player.vy += gravity;
+            if (onWall !== 0 && player.vy > 0) player.vy *= 0.7;
+            player.y += player.vy;
+
+            if (player.y < 0) {
+                player.y = 0;
+                if (player.vy < 0) player.vy = 0;
+            }
+
+            let grounded = false;
+
+            if (gameState === 'playing') {
+                walls.forEach(w => {
+                    if (isColliding(player, w)) {
+                        if (player.vy > 0) { player.y = w.y - player.h; player.vy = 0; grounded = true; }
+                        else if (player.vy < 0) { player.y = w.y + w.h; player.vy *= -0.5; }
+                    }
+                });
+
+                const oneWays = [...platforms, ...movingPlatforms, ...userBlocks];
+                oneWays.forEach(p => {
+                    if (p.isActive === false) return;
+                    if (player.vy >= 0 && player.x < p.x + p.w && player.x + player.w > p.x) {
+                        if (prevBottom <= p.y + 12 && player.y + player.h >= p.y) {
+                            if (p.type === 'answer') {
+                                p.isActive = false;
+                                player.vy = 3;
+                                if (p.isCorrect) {
+                                    p.status = 'correct';
+                                    gameState = 'transitioning';
+                                } else {
+                                    p.status = 'wrong';
+                                    die(false);
+                                }
+                            } else {
+                                player.y = p.y - player.h;
+                                player.vy = 0;
+                                grounded = true;
+                                if (p.type === 'moving' && p.axis === 'x') {
+                                    player.x += p.speed * p.dir;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (player.y > canvas.height + 50) {
+                if (gameState === 'transitioning') {
+                    currentLevel++;
+                    initLevel();
+                } else {
+                    shakeFrames = 15;
+                    initLevel();
+                }
+            }
+
+            if (upPressed && gameState === 'playing') {
+                if (grounded) {
+                    player.vy = player.jumpPower;
+                    player.scaleX = 0.7; player.scaleY = 1.3;
+                } else if (onWall !== 0) {
+                    player.vy = player.jumpPower * 0.95;
+                    player.vx = onWall === 1 ? -12.5 : 12.5;
+                    player.scaleX = 0.7; player.scaleY = 1.3;
+                }
+                upPressed = false;
+            }
+
+            if (grounded) {
+                player.scaleX += (1 - player.scaleX) * 0.3;
+                player.scaleY += (1 - player.scaleY) * 0.3;
+            } else {
+                player.scaleX += (0.9 - player.scaleX) * 0.1;
+                player.scaleY += (1.1 - player.scaleY) * 0.1;
+            }
+        }
+
+        function draw() {
+            if (gameState === 'start') return;
+            const lvl = levels[currentLevel];
+
+            ctx.save();
+            if (shakeFrames > 0) {
+                ctx.translate((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15);
+                shakeFrames--;
+            }
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, lvl.bgTop);
+            gradient.addColorStop(1, lvl.bgBot);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            walls.forEach(w => {
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(w.x, w.y, w.w, w.h);
+                ctx.strokeStyle = '#334155';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(w.x, w.y, w.w, w.h);
+                ctx.fillStyle = 'rgba(255,255,255,0.02)';
+                for (let i = 0; i < w.h; i += 20) ctx.fillRect(w.x, w.y + i, w.w, 2);
+            });
+
+            spikes.forEach(s => {
+                ctx.fillStyle = '#cbd5e1';
+                let spikeW = s.width / s.count;
+                for (let i = 0; i < s.count; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(s.x + (i * spikeW), s.y);
+                    ctx.lineTo(s.x + (i * spikeW) + (spikeW / 2), s.y - 15);
+                    ctx.lineTo(s.x + ((i + 1) * spikeW), s.y);
+                    ctx.fill();
+                }
+            });
+
+            userBlocks.forEach(b => {
+                const opacity = Math.min(1, b.life / 60);
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(b.x, b.y, b.w, b.h);
+                ctx.strokeStyle = (b.life < 60 && b.life % 10 < 5) ? '#ef4444' : '#b45309';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(b.x, b.y, b.w, b.h);
+                ctx.globalAlpha = 1;
+            });
+
+            movingPlatforms.forEach(m => {
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(m.x, m.y, m.w, m.h);
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(m.x, m.y, m.w, m.h);
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                for (let i = 0; i < m.w; i += 10) ctx.fillRect(m.x + i, m.y, 5, m.h);
+            });
+
+            platforms.forEach(p => {
+                ctx.globalAlpha = p.alpha !== undefined ? p.alpha : 1;
+
+                if (p.type === 'ground') {
+                    ctx.fillStyle = '#475569';
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = '#64748b';
+                    ctx.strokeRect(p.x, p.y, p.w, p.h);
+                } else if (p.type === 'answer') {
+                    if (p.status === 'correct') ctx.fillStyle = '#10b981';
+                    else if (p.status === 'wrong') ctx.fillStyle = '#ef4444';
+                    else ctx.fillStyle = '#38bdf8';
+
+                    ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = '#bae6fd';
+                    if (p.status) ctx.strokeStyle = 'transparent';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+                    if (p.text) {
+                        ctx.fillStyle = '#0f172a';
+                        ctx.font = 'bold 15px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(p.text, p.x + p.w / 2, p.y + p.h / 2);
+                    }
+                }
+                ctx.globalAlpha = 1;
+            });
+
+            hazards.forEach(h => {
+                ctx.save();
+                ctx.translate(h.x, h.y);
+                ctx.rotate(h.angle);
+                ctx.fillStyle = '#cbd5e1';
+                for (let i = 0; i < 8; i++) {
+                    ctx.rotate(Math.PI / 4);
+                    ctx.beginPath();
+                    ctx.moveTo(-5, -h.size + 10);
+                    ctx.lineTo(5, -h.size + 10);
+                    ctx.lineTo(0, -h.size - 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath(); ctx.arc(0, 0, h.size - 4, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#334155';
+                ctx.beginPath(); ctx.arc(0, 0, h.size / 3, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            });
+
+            ctx.save();
+            ctx.translate(player.x + player.w / 2, player.y + player.h);
+            ctx.scale(player.scaleX, player.scaleY);
+
+            ctx.fillStyle = player.color;
+            ctx.shadowColor = player.color;
+            ctx.shadowBlur = (gameState === 'transitioning') ? 30 : 15;
+            ctx.fillRect(-player.w / 2, -player.h, player.w, player.h);
+
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            let eyeOffset = player.vx > 1 ? 4 : (player.vx < -1 ? -4 : 0);
+            ctx.fillRect(-player.w / 2 + 5 + eyeOffset, -player.h + 6, 4, 7);
+            ctx.fillRect(-player.w / 2 + 17 + eyeOffset, -player.h + 6, 4, 7);
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+
+</html>
