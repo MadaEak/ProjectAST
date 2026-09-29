@@ -2,18 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AST Builder ULTIMATE</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { 
+        html, body { 
             background-color: #0f172a; 
             color: #f8fafc; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             width: 100%; 
             height: 100%; 
-            margin: 0;
-            padding: 0;
             overflow: hidden;
             position: fixed;
             touch-action: none;
@@ -29,29 +27,29 @@
             justify-content: space-between;
             align-items: center;
             background: #0f172a;
-            padding: 6px 0;
+            padding: env(safe-area-inset-top, 6px) 0 env(safe-area-inset-bottom, 6px) 0;
         }
         #gameUI { 
             width: 100%; 
-            max-width: 600px;
+            max-width: 900px;
             pointer-events: none; 
             z-index: 10; 
             display: flex; 
             justify-content: space-between; 
-            padding: 0 15px; 
+            padding: 0 10px; 
             box-sizing: border-box; 
             flex-shrink: 0;
         }
         .ui-box { 
             background: rgba(30, 41, 59, 0.95); 
             padding: 4px 8px; 
-            border-radius: 8px; 
+            border-radius: 6px; 
             border: 1px solid #334155; 
             backdrop-filter: blur(4px); 
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
         h1 { margin: 0; color: #38bdf8; font-size: 0.8rem; text-shadow: 0 0 10px rgba(56,189,248,0.5); }
-        h2 { margin: 2px 0 0 0; color: #cbd5e1; font-size: 0.65rem; font-family: monospace; }
+        h2 { margin: 1px 0 0 0; color: #cbd5e1; font-size: 0.65rem; font-family: monospace; }
         #timerDisplay { font-size: 0.8rem; font-weight: bold; color: #fbbf24; font-family: monospace;}
         
         .canvas-wrapper {
@@ -60,49 +58,51 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            padding: 2px 10px;
+            padding: 2px 8px;
             overflow: hidden;
+            min-height: 0;
         }
 
         canvas { 
-            border-radius: 12px; 
+            border-radius: 10px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
             border: 2px solid #38bdf8; 
-            max-width: 100%; 
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
+            max-width: 900px; 
+            max-height: 500px;
             object-fit: contain; 
             background: #0f172a;
         }
         
         .touch-controls { 
             width: 100%; 
-            max-width: 600px;
+            max-width: 900px;
             display: flex; 
             justify-content: space-between; 
-            padding: 0 15px 12px 15px; 
+            padding: 0 10px 2px 10px; 
             box-sizing: border-box; 
             z-index: 20; 
             flex-shrink: 0;
         }
-        .touch-group { display: flex; gap: 14px; }
+        .touch-group { display: flex; gap: 10px; }
         .t-btn { 
-            width: 52px; 
-            height: 52px; 
-            background: rgba(56, 189, 248, 0.28); 
-            border: 2px solid rgba(56, 189, 248, 0.7); 
+            width: 48px; 
+            height: 48px; 
+            background: rgba(56, 189, 248, 0.25); 
+            border: 2px solid rgba(56, 189, 248, 0.6); 
             border-radius: 50%; 
             color: white; 
-            font-size: 1.1rem; 
+            font-size: 1rem; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             user-select: none; 
             backdrop-filter: blur(4px); 
             outline: none; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .t-btn:active { background: rgba(56, 189, 248, 0.6); transform: scale(0.95); }
-        #buildBtn { background: rgba(245, 158, 11, 0.4); border-color: rgba(245, 158, 11, 0.8); font-size: 1rem; }
+        #buildBtn { background: rgba(245, 158, 11, 0.35); border-color: rgba(245, 158, 11, 0.7); font-size: 0.95rem; }
 
         #instructions { 
             text-align: center; 
@@ -111,7 +111,7 @@
             padding-bottom: 2px;
             flex-shrink: 0;
         }
-        kbd { background: #334155; padding: 2px 4px; border-radius: 3px; color: #38bdf8; font-family: monospace; }
+        kbd { background: #334155; padding: 1px 3px; border-radius: 3px; color: #38bdf8; font-family: monospace; }
         
         .overlay-screen { 
             position: fixed; 
@@ -130,30 +130,16 @@
             box-sizing: border-box;
             backdrop-filter: blur(8px); 
         }
-        .input-group { margin: 6px 0; display: flex; flex-direction: column; align-items: center; gap: 4px;}
+        .input-group { margin: 8px 0; display: flex; flex-direction: column; align-items: center; gap: 6px;}
         input[type="text"] { padding: 8px 12px; font-size: 1rem; border-radius: 8px; border: 2px solid #38bdf8; background: #1e293b; color: white; outline: none; text-align: center; width: 220px;}
-        input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 50%; cursor: pointer; background: transparent;}
+        input[type="color"] { width: 44px; height: 44px; border: none; border-radius: 50%; cursor: pointer; background: transparent;}
         input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: 2px solid #38bdf8; }
-        button.start-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px 24px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-top: 8px;}
+        button.start-action { background: #38bdf8; color: #0f172a; border: none; padding: 10px 24px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-top: 10px;}
         button.start-action:hover { background: #0284c7; color: white; transform: scale(1.05);}
         .hidden { display: none !important; opacity: 0; pointer-events: none;}
         
-        #finalStats { background: #1e293b; padding: 12px; border-radius: 10px; border: 2px solid #10b981; text-align: center; margin-top: 8px;}
-        #finalTimeStr { font-size: 1.8rem; color: #fbbf24; font-family: monospace; font-weight: bold; margin: 4px 0;}
-
-        /* Ajustes específicos para Modo Horizontal (Landscape) en Móviles */
-        @media screen and (orientation: landscape) and (max-height: 500px) {
-            #gameContainer { padding: 2px 0; }
-            .canvas-wrapper { padding: 0; height: calc(100vh - 65px); }
-            canvas { max-height: calc(100vh - 68px); }
-            .touch-controls { padding: 0 20px 4px 20px; }
-            .t-btn { width: 42px; height: 42px; font-size: 0.95rem; }
-            #instructions { display: none; }
-            #gameUI { padding: 0 10px; }
-            .ui-box { padding: 2px 6px; font-size: 0.65rem; }
-            h1 { font-size: 0.75rem; }
-            h2 { font-size: 0.55rem; }
-        }
+        #finalStats { background: #1e293b; padding: 15px; border-radius: 10px; border: 2px solid #10b981; text-align: center; margin-top: 10px;}
+        #finalTimeStr { font-size: 2rem; color: #fbbf24; font-family: monospace; font-weight: bold; margin: 5px 0;}
     </style>
 </head>
 <body>
@@ -190,15 +176,15 @@
 
         <!-- Pantalla Inicio -->
         <div id="startScreen" class="overlay-screen">
-            <h1 style="font-size: 2rem; margin-bottom: 6px; color:#38bdf8;">AST Builder <span style="color:#ef4444">ULTIMATE</span></h1>
-            <p style="color: #94a3b8; margin-bottom: 10px; max-width: 340px; font-size: 0.8rem; line-height: 1.3;">
-                Compatible con Vertical y Horizontal.<br><strong>Usa botones virtuales o toca el lienzo para construir 🧱.</strong>
+            <h1 style="font-size: 2.2rem; margin-bottom: 8px; color:#38bdf8;">AST Builder <span style="color:#ef4444">ULTIMATE</span></h1>
+            <p style="color: #94a3b8; margin-bottom: 15px; max-width: 340px; font-size: 0.85rem; line-height: 1.4;">
+                Móvil y PC. Usa botones virtuales o teclado.<br><strong>Toca el lienzo o usa 🧱 para construir bloques.</strong>
             </p>
             <div class="input-group">
                 <input type="text" id="playerNameInput" placeholder="Tu Nombre" autocomplete="off" value="Estudiante">
             </div>
             <div class="input-group">
-                <label style="color:#cbd5e1; font-size:0.8rem;">Pinta tu Cubo:</label>
+                <label style="color:#cbd5e1; font-size:0.85rem;">Pinta tu Cubo:</label>
                 <input type="color" id="playerColorInput" value="#10b981">
             </div>
             <button class="start-action" id="startBtn">Comenzar Examen</button>
@@ -206,11 +192,11 @@
 
         <!-- Pantalla Final -->
         <div id="endScreen" class="overlay-screen hidden">
-            <h1 style="font-size: 1.8rem; color: #10b981; text-shadow: 0 0 20px rgba(16,185,129,0.5);">¡Ingeniería Dominada!</h1>
+            <h1 style="font-size: 2rem; color: #10b981; text-shadow: 0 0 20px rgba(16,185,129,0.5);">¡Ingeniería Dominada!</h1>
             <div id="finalStats">
-                <h2 style="color: #e2e8f0; font-size: 0.9rem;">Tiempo Total de <span id="finalNameDisplay"></span>:</h2>
+                <h2 style="color: #e2e8f0; font-size: 0.95rem;">Tiempo Total de <span id="finalNameDisplay"></span>:</h2>
                 <div id="finalTimeStr">00:00.00</div>
-                <p style="color: #94a3b8; font-size: 0.75rem;">¡Has superado el desafío definitivo!</p>
+                <p style="color: #94a3b8; font-size: 0.8rem;">¡Has superado el desafío definitivo!</p>
             </div>
             <button class="start-action" onclick="location.reload()">Nuevo Intento</button>
         </div>
